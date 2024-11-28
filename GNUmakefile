@@ -27,6 +27,7 @@ build_deps:
 buildThis:
 	mkdir -p $(BUILD)
 	cd $(BUILD) && $(VOC) -s $(mkfile_dir_path)/src/BIT.Mod
+	cd $(BUILD) && $(VOC) -s $(mkfile_dir_path)/src/TwoComplement.Mod
 	cd $(BUILD) && $(VOC) -s $(mkfile_dir_path)/src/DES.Mod
 
 tests:
