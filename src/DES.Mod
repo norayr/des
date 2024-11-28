@@ -267,7 +267,7 @@ VAR
     END;
 
     right := BIT.LOR(BIT.LLSH(right,31),RotateRight(right, 1));
-    work := BIT.LAND(BIT.LXOR(leftt,right),0AAAAAAAAH);
+    work := BIT.LAND(BIT.LXOR(leftt,right), TwoComplement.FromHugeIntToSigned(0AAAAAAAAH));
     leftt := BIT.LXOR(leftt,work);
     right := BIT.LXOR(right,work);
     leftt := BIT.LOR(BIT.LLSH(leftt,31),RotateRight(leftt, 1));
@@ -402,22 +402,25 @@ BEGIN
   SP1[56] := 00000404H; SP1[57] := 01000400H; SP1[58] := 01000400H; SP1[59] := 00000000H;
   SP1[60] := 00010004H; SP1[61] := 00010400H; SP1[62] := 00000000H; SP1[63] := 01010004H;
 
-  SP2[0] := 80108020H; SP2[1] := 80008000H; SP2[2] := 00008000H; SP2[3] := 00108020H;
-  SP2[4] := 00100000H; SP2[5] := 00000020H; SP2[6] := 80100020H; SP2[7] := 80008020H;
-  SP2[8] := 80000020H; SP2[9] := 80108020H; SP2[10] := 80108000H; SP2[11] := 80000000H;
-  SP2[12] := 80008000H; SP2[13] := 00100000H; SP2[14] := 00000020H; SP2[15] := 80100020H;
-  SP2[16] := 00108000H; SP2[17] := 00100020H; SP2[18] := 80008020H; SP2[19] := 00000000H;
-  SP2[20] := 80000000H; SP2[21] := 00008000H; SP2[22] := 00108020H; SP2[23] := 80100000H;
-  SP2[24] := 00100020H; SP2[25] := 80000020H; SP2[26] := 00000000H; SP2[27] := 00108000H;
-  SP2[28] := 00008020H; SP2[29] := 80108000H; SP2[30] := 80100000H; SP2[31] := 00008020H;
-  SP2[32] := 00000000H; SP2[33] := 00108020H; SP2[34] := 80100020H; SP2[35] := 00100000H;
-  SP2[36] := 80008020H; SP2[37] := 80100000H; SP2[38] := 80108000H; SP2[39] := 00008000H;
-  SP2[40] := 80100000H; SP2[41] := 80008000H; SP2[42] := 00000020H; SP2[43] := 80108020H;
-  SP2[44] := 00108020H; SP2[45] := 00000020H; SP2[46] := 00008000H; SP2[47] := 80000000H;
-  SP2[48] := 00008020H; SP2[49] := 80108000H; SP2[50] := 00100000H; SP2[51] := 80000020H;
-  SP2[52] := 00100020H; SP2[53] := 80008020H; SP2[54] := 80000020H; SP2[55] := 00100020H;
-  SP2[56] := 00108000H; SP2[57] := 00000000H; SP2[58] := 80008000H; SP2[59] := 00008020H;
-  SP2[60] := 80000000H; SP2[61] := 80100020H; SP2[62] := 80108020H; SP2[63] := 00108000H;
+  SP2[0] := TwoComplement.FromHugeIntToSigned(80108020H); SP2[1] := TwoComplement.FromHugeIntToSigned(80008000H); SP2[2] := 00008000H; SP2[3] := 00108020H;
+    SP2[4] := 00100000H; SP2[5] := 00000020H; SP2[6] := TwoComplement.FromHugeIntToSigned(80100020H); SP2[7] := TwoComplement.FromHugeIntToSigned(80008020H);
+    SP2[8] := TwoComplement.FromHugeIntToSigned(80000020H); SP2[9] := TwoComplement.FromHugeIntToSigned(80108020H); SP2[10] := TwoComplement.FromHugeIntToSigned(80108000H); SP2[11] := TwoComplement.FromHugeIntToSigned(80000000H);
+    SP2[12] := TwoComplement.FromHugeIntToSigned(80008000H); SP2[13] := 00100000H; SP2[14] := 00000020H; SP2[15] := TwoComplement.FromHugeIntToSigned(80100020H);
+    SP2[16] := 00108000H; SP2[17] := 00100020H; SP2[18] := TwoComplement.FromHugeIntToSigned(80008020H); SP2[19] := 00000000H;
+    SP2[20] := TwoComplement.FromHugeIntToSigned(80000000H); SP2[21] := 00008000H; SP2[22] := 00108020H; SP2[23] := TwoComplement.FromHugeIntToSigned(80100000H);
+    SP2[24] := 00100020H; SP2[25] := TwoComplement.FromHugeIntToSigned(80000020H); SP2[26] := 00000000H; SP2[27] := 00108000H;
+    SP2[28] := 00008020H; SP2[29] := TwoComplement.FromHugeIntToSigned(80108000H); SP2[30] := TwoComplement.FromHugeIntToSigned(80100000H); SP2[31] := 00008020H;
+    SP2[32] := 00000000H; SP2[33] := 00108020H; SP2[34] := TwoComplement.FromHugeIntToSigned(80100020H); SP2[35] := 00100000H;
+    SP2[36] := TwoComplement.FromHugeIntToSigned(80008020H); SP2[37] := TwoComplement.FromHugeIntToSigned(80100000H); SP2[38] := TwoComplement.FromHugeIntToSigned(80108000H); SP2[39] := 00008000H;
+    SP2[40] := TwoComplement.FromHugeIntToSigned(80100000H); SP2[41] := TwoComplement.FromHugeIntToSigned(80008000H); SP2[42] := 00000020H; SP2[43] := TwoComplement.FromHugeIntToSigned(80108020H);
+    SP2[44] := 00108020H; SP2[45] := 00000020H; SP2[46] := 00008000H; SP2[47] := TwoComplement.FromHugeIntToSigned(80000000H);
+    SP2[48] := 00008020H; SP2[49] := TwoComplement.FromHugeIntToSigned(80108000H); SP2[50] := 00100000H; SP2[51] := TwoComplement.FromHugeIntToSigned(80000020H);
+    SP2[52] := 00100020H; SP2[53] := TwoComplement.FromHugeIntToSigned(80008020H); SP2[54] := TwoComplement.FromHugeIntToSigned(80000020H); SP2[55] := 00100020H;
+    SP2[56] := 00108000H; SP2[57] := 00000000H; SP2[58] := TwoComplement.FromHugeIntToSigned(80008000H); SP2[59] := 00008020H;
+    SP2[60] := TwoComplement.FromHugeIntToSigned(80000000H); SP2[61] := TwoComplement.FromHugeIntToSigned(80100020H); SP2[62] := TwoComplement.FromHugeIntToSigned(80108020H); SP2[63] := 00108000H;
+
+
+
 
   SP3[0] := 00000208H; SP3[1] := 08020200H; SP3[2] := 00000000H; SP3[3] := 08020008H;
   SP3[4] := 08000200H; SP3[5] := 00000000H; SP3[6] := 00020208H; SP3[7] := 08000200H;
