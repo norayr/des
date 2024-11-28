@@ -185,52 +185,88 @@ MODULE BIT;  (** portable *)  (* tk 12.2.96 *)
 
   (** set bit n in x*)
   PROCEDURE CSETBIT*(VAR x: CHAR; n: SHORTINT);
-    VAR i: LONGINT;
-  BEGIN ASSERT((n >= 0) & (n <= 7));
-    i := ORD(x); IF rbo THEN INCL(S.VAL(SET, i), 31-n) ELSE INCL(S.VAL(SET, i), n) END; x := CHR(i)
+  VAR i: SET;
+  BEGIN
+    ASSERT((n >= 0) & (n <= 7));
+    i := S.VAL(SET, ORD(x));
+    INCL(i, n);  (* Set the bit *)
+    x := CHR(S.VAL(LONGINT, i));
   END CSETBIT;
 
   PROCEDURE SSETBIT*(VAR x: SHORTINT; n: SHORTINT);
-    VAR i: LONGINT;
-  BEGIN ASSERT((n >= 0) & (n <= 7));
-    i := LONG(LONG(x)); IF rbo THEN INCL(S.VAL(SET, i), 31-n) ELSE INCL(S.VAL(SET, i), n) END; x := SHORT(SHORT(i))
+  VAR i: SET; temp: INTEGER;
+BEGIN
+    ASSERT((n >= 0) & (n <= 7));  (* Ensure the bit index is within range *)
+    temp := LONG(x);               (* Get the integer representation of x *)
+    i := {};                      (* Initialize an empty set *)
+
+    (* Populate the set with the bits from the integer *)
+    FOR temp := 0 TO 7 DO
+      IF temp IN S.VAL(SET, x) THEN INCL(i, temp) END;
+    END;
+
+    (* Include the new bit *)
+    INCL(i, n);                   (* Add the bit at position n *)
+
+    (* Convert the set back to SHORTINT *)
+    x := SHORT(S.VAL(INTEGER, i));
   END SSETBIT;
 
   PROCEDURE ISETBIT*(VAR x: INTEGER; n: SHORTINT);
-    VAR i: LONGINT;
-  BEGIN ASSERT((n >= 0) & (n <= 15));
-    i := LONG(x); IF rbo THEN INCL(S.VAL(SET, i), 31-n) ELSE INCL(S.VAL(SET, i), n) END; x := SHORT(i)
+    VAR i: SET;
+  BEGIN
+    ASSERT((n >= 0) & (n <= 15));
+    i := S.VAL(SET, x);  (* Convert x to a set *)
+    INCL(i, n);          (* Include the bit at position n *)
+    x := S.VAL(INTEGER, i);  (* Convert back to INTEGER *)
   END ISETBIT;
 
   PROCEDURE LSETBIT*(VAR x: LONGINT; n: SHORTINT);
-  BEGIN ASSERT((n >= 0) & (n <= 31));
-    IF rbo THEN INCL(S.VAL(SET, x), 31-n) ELSE INCL(S.VAL(SET, x), n) END
+    VAR i: SET;
+  BEGIN
+    ASSERT((n >= 0) & (n <= 31));
+    i := S.VAL(SET, x);  (* Convert x to a set *)
+    INCL(i, n);          (* Include the bit at position n *)
+    x := S.VAL(LONGINT, i);  (* Convert back to LONGINT *)
   END LSETBIT;
 
 
   (** clear bit n in x*)
   PROCEDURE CCLRBIT*(VAR x: CHAR; n: SHORTINT);
-    VAR i: LONGINT;
-  BEGIN ASSERT(ABS(n) < 8);
-    i := ORD(x); IF rbo THEN EXCL(S.VAL(SET, i), 31-n) ELSE EXCL(S.VAL(SET, i), n) END; x := CHR(i)
+    VAR i: SET;
+  BEGIN
+    ASSERT((n >= 0) & (n <= 7));
+    i := S.VAL(SET, ORD(x));  (* Convert x to a set *)
+    EXCL(i, n);               (* Exclude the bit at position n *)
+    x := CHR(S.VAL(LONGINT, i));  (* Convert back to CHAR *)
   END CCLRBIT;
 
   PROCEDURE SCLRBIT*(VAR x: SHORTINT; n: SHORTINT);
-    VAR i: LONGINT;
-  BEGIN ASSERT(ABS(n) < 8);
-    i := LONG(LONG(x)); IF rbo THEN EXCL(S.VAL(SET, i), 31-n) ELSE EXCL(S.VAL(SET, i), n) END; x := SHORT(SHORT(i))
+    VAR i: SET;
+  BEGIN
+    ASSERT((n >= 0) & (n <= 7));
+    i := S.VAL(SET, x);  (* Convert x to a set *)
+    EXCL(i, n);          (* Exclude the bit at position n *)
+    x := SHORT(S.VAL(INTEGER, i));  (* Convert back to SHORTINT *)
   END SCLRBIT;
 
   PROCEDURE ICLRBIT*(VAR x: INTEGER; n: SHORTINT);
-    VAR i: LONGINT;
-  BEGIN ASSERT(ABS(n) < 16);
-    i := LONG(x); IF rbo THEN EXCL(S.VAL(SET, i), 31-n) ELSE EXCL(S.VAL(SET, i), n) END; x := SHORT(i)
+    VAR i: SET;
+  BEGIN
+    ASSERT((n >= 0) & (n <= 15));
+    i := S.VAL(SET, x);  (* Convert x to a set *)
+    EXCL(i, n);          (* Exclude the bit at position n *)
+    x := S.VAL(INTEGER, i);  (* Convert back to INTEGER *)
   END ICLRBIT;
 
   PROCEDURE LCLRBIT*(VAR x: LONGINT; n: SHORTINT);
-  BEGIN IF rbo THEN EXCL(S.VAL(SET, x), 31-n) ELSE EXCL(S.VAL(SET, x), n) END
+    VAR i: SET;
+  BEGIN
+    ASSERT((n >= 0) & (n <= 31));
+    i := S.VAL(SET, x);  (* Convert x to a set *)
+    EXCL(i, n);          (* Exclude the bit at position n *)
+    x := S.VAL(LONGINT, i);  (* Convert back to LONGINT *)
   END LCLRBIT;
-
 
   (** unsigned comparison: x < y *)
   PROCEDURE SLESS*(x, y: SHORTCARD): BOOLEAN;
