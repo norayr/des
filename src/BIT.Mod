@@ -71,9 +71,10 @@ MODULE BIT;  (** portable *)  (* tk 12.2.96 *)
 
   (** bitwise logical left-shift: x shifted n *)
   PROCEDURE CLSH*(x: CHAR; n: SHORTINT): CHAR;
+    VAR masked: LONGINT;
   BEGIN
-    IF risc THEN RETURN CHR(S.LSH(S.VAL(LONGINT, S.VAL(SET, ORD(x)) * S.VAL(SET, 0FFH)), n))
-    ELSE RETURN S.LSH(x, n) END
+    masked := ORD(x) MOD 256; (* Ensure only the lower 8 bits are considered *)
+    RETURN CHR(S.LSH(masked, n)); (* Perform the shift and return the result *)
   END CLSH;
 
   PROCEDURE SLSH*(x: SHORTINT; n: SHORTINT): SHORTINT;
@@ -95,24 +96,38 @@ MODULE BIT;  (** portable *)  (* tk 12.2.96 *)
 
   (** bitwise rotation: x rotatated by n bits *)
   PROCEDURE CROT*(x: CHAR; n: SHORTINT): CHAR;
-    VAR s0, s1: SET; i: INTEGER;
+    VAR s0, s1: SET; i, bitMask: INTEGER;
   BEGIN
     IF risc THEN
-      s0 := S.VAL(SET, ORD(x)); s1 := {};
-      IF rbo THEN
-        i := 0; WHILE i < 8 DO
-          IF 31-i IN s0 THEN INCL(s1, 31 - ((i+n) MOD 8)) END;
-          INC(i)
-        END;
-      ELSE
-        i := 0; WHILE i < 8 DO
-          IF i IN s0 THEN INCL(s1, (i+n) MOD 8) END;
-          INC(i)
+      s0 := {}; s1 := {}; (* Initialize sets *)
+
+      (* Populate s0 manually from the bits of ORD(x) *)
+      FOR i := 0 TO 7 DO
+        bitMask := S.LSH(1, i); (* Generate a bit mask for the i-th bit *)
+        IF (ORD(x) MOD S.LSH(1, i + 1)) >= bitMask THEN
+          INCL(s0, i);
         END;
       END;
-      RETURN CHR(S.VAL(LONGINT, s1))
-    ELSE RETURN S.ROT(x, n) END;
+
+      IF rbo THEN
+        (* Reverse bit order rotation *)
+        FOR i := 0 TO 7 DO
+          IF (31 - i) IN s0 THEN INCL(s1, 31 - ((i + n) MOD 8)) END;
+        END;
+      ELSE
+        (* Standard rotation *)
+        FOR i := 0 TO 7 DO
+          IF i IN s0 THEN INCL(s1, (i + n) MOD 8) END;
+        END;
+      END;
+
+      RETURN CHR(S.VAL(LONGINT, s1));
+    ELSE
+      (* Use system-provided rotation for non-risc systems *)
+      RETURN S.ROT(x, n);
+    END;
   END CROT;
+
 
   PROCEDURE SROT*(x: SHORTINT; n: SHORTINT): SHORTINT;
     VAR s0, s1: SET; i: INTEGER;
@@ -173,8 +188,17 @@ MODULE BIT;  (** portable *)  (* tk 12.2.96 *)
 
   (** test bit n in x*)
   PROCEDURE CBIT*(x: CHAR; n: SHORTINT): BOOLEAN;
-  BEGIN ASSERT((n >= 0) & (n <= 7));
-    IF rbo THEN RETURN (31-n) IN S.VAL(SET, ORD(x)) ELSE RETURN n IN S.VAL(SET, LONG(ORD(x))) END
+    VAR mask: CHAR;
+  BEGIN
+    ASSERT((n >= 0) & (n <= 7));  (* Ensure the bit index is within the valid range *)
+
+    IF rbo THEN
+      mask := CHR(S.LSH(1, 31 - n));  (* Create a mask for the (31-n)-th bit *)
+      RETURN (ORD(x) MOD S.LSH(1, 32)) >= ORD(mask);
+    ELSE
+      mask := CHR(S.LSH(1, n));  (* Create a mask for the n-th bit *)
+      RETURN (ORD(x) MOD S.LSH(1, n + 1)) >= ORD(mask);
+    END;
   END CBIT;
 
   PROCEDURE BIT*(x: LONGINT; n: SHORTINT): BOOLEAN;
@@ -185,38 +209,38 @@ MODULE BIT;  (** portable *)  (* tk 12.2.96 *)
 
   (** set bit n in x*)
   PROCEDURE CSETBIT*(VAR x: CHAR; n: SHORTINT);
-  VAR i: SET;
+    VAR mask: SET; temp: SET;
+    l: LONGINT;
   BEGIN
-    ASSERT((n >= 0) & (n <= 7));
-    i := S.VAL(SET, ORD(x));
-    INCL(i, n);  (* Set the bit *)
-    x := CHR(S.VAL(LONGINT, i));
+    ASSERT((n >= 0) & (n <= 7));  (* Ensure the bit index is within range *)
+
+    mask := {n};  (* Create a mask with only the n-th bit set *)
+    l := ORD(x);   (* Convert CHAR to LONGINT *)
+    temp := S.VAL(SET, l);  (* Convert LONGINT x to a SET *)
+    temp := temp + mask;         (* Perform bitwise OR using SET *)
+    x := CHR(S.VAL(INTEGER, temp) MOD 256);  (* Convert back to CHAR, ensure 8-bit limit *)
   END CSETBIT;
 
   PROCEDURE SSETBIT*(VAR x: SHORTINT; n: SHORTINT);
-  VAR i: SET; temp: INTEGER;
-BEGIN
+    VAR i: SET; l: LONGINT;
+  BEGIN
     ASSERT((n >= 0) & (n <= 7));  (* Ensure the bit index is within range *)
-    temp := LONG(x);               (* Get the integer representation of x *)
-    i := {};                      (* Initialize an empty set *)
 
-    (* Populate the set with the bits from the integer *)
-    FOR temp := 0 TO 7 DO
-      IF temp IN S.VAL(SET, x) THEN INCL(i, temp) END;
-    END;
+    l := LONG(x);            (* Convert SHORTINT x to LONGINT *)
+    i := S.VAL(SET, l);      (* Convert LONGINT to SET *)
 
-    (* Include the new bit *)
-    INCL(i, n);                   (* Add the bit at position n *)
+    INCL(i, n);              (* Add the bit at position n *)
 
-    (* Convert the set back to SHORTINT *)
-    x := SHORT(S.VAL(INTEGER, i));
+    x := SHORT(S.VAL(INTEGER, i));  (* Convert back to SHORTINT *)
   END SSETBIT;
 
   PROCEDURE ISETBIT*(VAR x: INTEGER; n: SHORTINT);
     VAR i: SET;
+        l: LONGINT;
   BEGIN
     ASSERT((n >= 0) & (n <= 15));
-    i := S.VAL(SET, x);  (* Convert x to a set *)
+    l := x;
+    i := S.VAL(SET, l);  (* Convert x to a set *)
     INCL(i, n);          (* Include the bit at position n *)
     x := S.VAL(INTEGER, i);  (* Convert back to INTEGER *)
   END ISETBIT;
@@ -234,29 +258,35 @@ BEGIN
   (** clear bit n in x*)
   PROCEDURE CCLRBIT*(VAR x: CHAR; n: SHORTINT);
     VAR i: SET;
+        l: LONGINT;
   BEGIN
     ASSERT((n >= 0) & (n <= 7));
-    i := S.VAL(SET, ORD(x));  (* Convert x to a set *)
+    l := ORD(x);
+    i := S.VAL(SET, l);  (* Convert x to a set *)
     EXCL(i, n);               (* Exclude the bit at position n *)
     x := CHR(S.VAL(LONGINT, i));  (* Convert back to CHAR *)
   END CCLRBIT;
 
   PROCEDURE SCLRBIT*(VAR x: SHORTINT; n: SHORTINT);
     VAR i: SET;
+        l: LONGINT;
   BEGIN
     ASSERT((n >= 0) & (n <= 7));
-    i := S.VAL(SET, x);  (* Convert x to a set *)
+    l := x;
+    i := S.VAL(SET, l);  (* Convert x to a set *)
     EXCL(i, n);          (* Exclude the bit at position n *)
-    x := SHORT(S.VAL(INTEGER, i));  (* Convert back to SHORTINT *)
+    x := SHORT(SHORT((S.VAL(LONGINT, i))));  (* Convert back to SHORTINT *)
   END SCLRBIT;
 
   PROCEDURE ICLRBIT*(VAR x: INTEGER; n: SHORTINT);
     VAR i: SET;
+        l: LONGINT;
   BEGIN
     ASSERT((n >= 0) & (n <= 15));
-    i := S.VAL(SET, x);  (* Convert x to a set *)
+    l := x;
+    i := S.VAL(SET, l);  (* Convert x to a set *)
     EXCL(i, n);          (* Exclude the bit at position n *)
-    x := S.VAL(INTEGER, i);  (* Convert back to INTEGER *)
+    x := SHORT(S.VAL(LONGINT, i));  (* Convert back to INTEGER *)
   END ICLRBIT;
 
   PROCEDURE LCLRBIT*(VAR x: LONGINT; n: SHORTINT);
