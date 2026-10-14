@@ -1,45 +1,22 @@
 MODULE TwoComplement;
 
-IMPORT Out, S := SYSTEM;
-
 CONST
   MaxPositive = 2147483647;  (* Maximum signed 32-bit integer *)
-  Mask32 = 0FFFFFFFFH;       (* Mask for the lower 32 bits *)
-
-PROCEDURE ToSigned*(value: LONGINT): LONGINT;
-VAR
-  Modulo: LONGINT;
-BEGIN
-  Modulo := S.LSH(1, 32);  (* Compute 2^32 dynamically *)
-  IF value > MaxPositive THEN
-    RETURN value - Modulo
-  ELSE
-    RETURN value
-  END
-END ToSigned;
+  Modulo = 100000000H;      (* 2^32, evaluated in HUGEINT, not a narrow shift *)
 
 PROCEDURE FromHugeIntToSigned*(value: HUGEINT): LONGINT;
-VAR
-  HighPart, LowPart: LONGINT;
+VAR low: HUGEINT;
 BEGIN
-  (* Extract the low 32 bits *)
-  LowPart := S.VAL(LONGINT, value MOD S.LSH(1, 32));  (* Correctly get the lower 32 bits *)
-
-  (* Extract the high 32 bits *)
-  HighPart := S.VAL(LONGINT, value DIV S.LSH(1, 32));  (* Use DIV to get the upper 32 bits *)
-
-  (* Combine high and low parts into a single LONGINT *)
-  RETURN ToSigned(S.LSH(HighPart, 32) + LowPart);
+  low := value MOD Modulo;
+  IF low > MaxPositive THEN DEC(low, Modulo) END;
+  RETURN SHORT(low)
 END FromHugeIntToSigned;
 
+PROCEDURE ToSigned*(value: LONGINT): LONGINT;
 BEGIN
-  (* Example usage *)
-  Out.Int(ToSigned(S.VAL(LONGINT, S.LSH(0AAAAH, 16) + 0AAAAH)), 0);  (* Construct 0AAAAAAAAH dynamically *)
-  (*  Should print −1431655766 *)
-  Out.Ln;
+  RETURN FromHugeIntToSigned(value)
+END ToSigned;
 
-Out.Int(FromHugeIntToSigned(S.VAL(HUGEINT, 0AAAAAAAAH)), 0);  (* Should print −1431655766 *)
-  Out.Ln
 END TwoComplement.
 
 
